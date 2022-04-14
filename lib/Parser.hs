@@ -2,13 +2,15 @@
 
 module Parser where
 
-import qualified Data.String as T
+import Control.Applicative ((<|>))
+import Control.Monad (void)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Void (Void)
 import MemoryProfile
-import Text.Megaparsec (Parsec, many, manyTill, try)
+import Text.Megaparsec (Parsec, eof, many, manyTill, try)
 import Text.Megaparsec.Char (asciiChar, char, digitChar, newline, space, string)
+import Text.Megaparsec.Debug (dbg)
 
 type Parser = Parsec Void Text
 
@@ -20,14 +22,14 @@ sectionHeader = do
   name <- manyTill asciiChar newline
   string sectionSeparator <* newline
 
-  pure (T.fromString name)
+  pure (T.pack name)
 
 dataPoint :: Parser DataPoint
 dataPoint = do
-  digits <- space *> many digitChar <* string "  "
-  label <- manyTill asciiChar newline
+  digits <- dbg "digits" $ space *> manyTill digitChar (string "  ")
+  label <- dbg "label" $ manyTill asciiChar newline
 
-  pure $ DataPoint (read digits) (T.fromString label)
+  pure $ DataPoint (read digits) (T.pack label)
 
 allocation :: Text -> Parser Allocation
 allocation section_name
@@ -35,8 +37,8 @@ allocation section_name
   | otherwise = value_label
   where
     string_allocs = do
-      (DataPoint total str) <- dataPoint
-      allocations <- manyTill dataPoint newline
+      (DataPoint total str) <- dbg "string" dataPoint
+      allocations <- dbg "allocations" $ manyTill dataPoint newline
 
       pure $ StringAllocation str total allocations
 
@@ -44,10 +46,10 @@ allocation section_name
 
 section :: Parser Section
 section = do
-  name <- sectionHeader
-  data_points <- many (try $ allocation name)
+  name <- dbg "sectionHeader" sectionHeader
+  data_points <- manyTill (try $ allocation name) (void newline <|> eof)
 
   pure (Section name data_points)
 
 memoryProfile :: Parser MemoryProfile
-memoryProfile = many (section <* newline)
+memoryProfile = manyTill ((try newline *> section) <|> section) eof

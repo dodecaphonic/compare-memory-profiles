@@ -1,6 +1,9 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module MemoryProfile where
 
 import Data.Text (Text)
+import Optics.TH
 
 data DataPoint = DataPoint
   { _value :: Integer,
@@ -20,3 +23,6 @@ data Section = Section
   deriving (Eq, Show)
 
 type MemoryProfile = [Section]
+
+makeLenses ''Section
+makeLenses ''DataPoint

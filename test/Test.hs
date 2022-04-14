@@ -2,7 +2,7 @@
 
 module Main where
 
-import Analysis (Comparison (..), buildComparisons)
+import Analysis (Comparison (..), compareProfiles)
 import MemoryProfile (Allocation (..), DataPoint (DataPoint), Section (..))
 import Parser (allocation, memoryProfile, section, sectionHeader)
 import Test.Tasty (TestTree, defaultMain, testGroup)
@@ -143,7 +143,7 @@ analysisTests =
                       ]
                   ]
 
-            buildComparisons devProfile prodProfile
+            compareProfiles devProfile prodProfile
               @?= [ Comparison
                       { _label = "/foo/bar/baz/biz.rb:114",
                         _profileA = Just $ RegularAllocation (DataPoint 141516 "/foo/bar/baz/biz.rb:114"),
@@ -170,7 +170,7 @@ analysisTests =
                       ]
                   ]
 
-            buildComparisons devProfile prodProfile
+            compareProfiles devProfile prodProfile
               @?= [ Comparison
                       { _label = "/foo/bar/baz/biz.rb:114",
                         _profileA = Just $ RegularAllocation (DataPoint 141516 "/foo/bar/baz/biz.rb:114"),

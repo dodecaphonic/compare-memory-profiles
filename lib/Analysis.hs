@@ -29,8 +29,8 @@ makeLenses ''Comparison
 emptyComparison :: Text -> Comparison
 emptyComparison label = Comparison {_profileA = Nothing, _profileB = Nothing, _label = label}
 
-buildComparisons :: MemoryProfile -> MemoryProfile -> [Comparison]
-buildComparisons profA profB =
+compareProfiles :: MemoryProfile -> MemoryProfile -> [Comparison]
+compareProfiles profA profB =
   Map.elems
     (Map.unionWith mergeComparisons profAComparisons profBComparisons)
   where

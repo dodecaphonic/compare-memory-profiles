@@ -29,23 +29,25 @@ makeLenses ''Section
 makeLenses ''DataPoint
 
 allocationLabel :: Lens' Allocation Text
-allocationLabel = lens getLabel undefined
+allocationLabel = lens getLabel setLabel
   where
     getLabel = \case
       RegularAllocation dp -> dp ^. label
       StringAllocation label _ _ -> label
 
-    setLabel newLabel = \case
+    setLabel alloc newLabel = case alloc of
       RegularAllocation dp -> RegularAllocation (dp & label .~ newLabel)
       StringAllocation _ bytes dps -> StringAllocation newLabel bytes dps
 
 allocationTotal :: Lens' Allocation Integer
-allocationTotal = lens getLabel undefined
+allocationTotal = lens getLabel setLabel
   where
+    getLabel :: Allocation -> Integer
     getLabel = \case
       RegularAllocation dp -> dp ^. value
       StringAllocation _ total _ -> total
 
-    setLabel newTotal = \case
+    setLabel :: Allocation -> Integer -> Allocation
+    setLabel alloc newTotal = case alloc of
       RegularAllocation dp -> RegularAllocation (dp & value .~ newTotal)
       StringAllocation label newTotal dps -> StringAllocation label newTotal dps

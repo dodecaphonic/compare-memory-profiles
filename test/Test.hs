@@ -2,14 +2,22 @@
 
 module Main where
 
-import MemoryProfile (Allocation (..), DataPoint (..), Section (..))
+import Analysis (Comparison (..), buildComparisons)
+import MemoryProfile (Allocation (..), DataPoint (DataPoint), Section (..))
 import Parser (allocation, memoryProfile, section, sectionHeader)
 import Test.Tasty (TestTree, defaultMain, testGroup)
 import Test.Tasty.HUnit (testCase, (@?=))
 import Text.Megaparsec (runParser)
 
 main :: IO ()
-main = defaultMain parserTests
+main =
+  defaultMain
+    ( testGroup
+        "all tests"
+        [ parserTests,
+          analysisTests
+        ]
+    )
 
 parserTests :: TestTree
 parserTests =
@@ -110,4 +118,69 @@ parserTests =
                     ]
                 ]
             ]
+    ]
+
+analysisTests :: TestTree
+analysisTests =
+  testGroup
+    "analyzing MemoryProfiles"
+    [ testGroup
+        "buildComparisons"
+        [ testCase "merges data points from dev and prod reports" $ do
+            let devProfile =
+                  [ Section
+                      "A Good Section"
+                      [ RegularAllocation (DataPoint 141516 "/foo/bar/baz/biz.rb:114"),
+                        RegularAllocation (DataPoint 1234567 "/foo/bar/baz/bosh.rb:14")
+                      ]
+                  ]
+
+            let prodProfile =
+                  [ Section
+                      "A Good Section"
+                      [ RegularAllocation (DataPoint 34567 "/foo/bar/baz/biz.rb:114"),
+                        RegularAllocation (DataPoint 891011 "/foo/bar/baz/bosh.rb:14")
+                      ]
+                  ]
+
+            buildComparisons devProfile prodProfile
+              @?= [ Comparison
+                      { _label = "/foo/bar/baz/biz.rb:114",
+                        _profileA = Just $ RegularAllocation (DataPoint 141516 "/foo/bar/baz/biz.rb:114"),
+                        _profileB = Just $ RegularAllocation (DataPoint 34567 "/foo/bar/baz/biz.rb:114")
+                      },
+                    Comparison
+                      { _label = "/foo/bar/baz/bosh.rb:14",
+                        _profileA = Just $ RegularAllocation (DataPoint 1234567 "/foo/bar/baz/bosh.rb:14"),
+                        _profileB = Just $ RegularAllocation (DataPoint 891011 "/foo/bar/baz/bosh.rb:14")
+                      }
+                  ],
+          testCase "includes data points only present on one end" $ do
+            let devProfile =
+                  [ Section
+                      "A Good Section"
+                      [ RegularAllocation (DataPoint 141516 "/foo/bar/baz/biz.rb:114")
+                      ]
+                  ]
+
+            let prodProfile =
+                  [ Section
+                      "A Good Section"
+                      [ RegularAllocation (DataPoint 891011 "/foo/bar/baz/bosh.rb:14")
+                      ]
+                  ]
+
+            buildComparisons devProfile prodProfile
+              @?= [ Comparison
+                      { _label = "/foo/bar/baz/biz.rb:114",
+                        _profileA = Just $ RegularAllocation (DataPoint 141516 "/foo/bar/baz/biz.rb:114"),
+                        _profileB = Nothing
+                      },
+                    Comparison
+                      { _label = "/foo/bar/baz/bosh.rb:14",
+                        _profileA = Nothing,
+                        _profileB = Just $ RegularAllocation (DataPoint 891011 "/foo/bar/baz/bosh.rb:14")
+                      }
+                  ]
+        ]
     ]

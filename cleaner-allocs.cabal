@@ -17,13 +17,14 @@ maintainer:          vitor@braunecapela.com
 build-type:          Simple
 extra-source-files:  CHANGELOG.md
 
-executable cleaner-allocs
+executable cleaner-allocs-exe
   main-is:             Main.hs
   -- other-modules:
   -- other-extensions:
   build-depends:       base >=4.15 && <4.16
                      , megaparsec >=9.1 && <10
                      , text >=1.2 && <2
+                     , optics >=0.4 && <0.5
                      , cleaner-allocs
   hs-source-dirs:      exe
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
@@ -32,6 +33,7 @@ executable cleaner-allocs
 library
   exposed-modules:     Parser
                      , MemoryProfile
+                     , Analysis
   -- other-extensions:
   build-depends:       base >=4.15 && <4.16
                      , megaparsec >=9.1 && <10

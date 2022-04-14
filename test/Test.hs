@@ -2,7 +2,8 @@
 
 module Main where
 
-import Parser (Allocation (..), DataPoint (..), Section (..), allocation, memoryProfile, section, sectionHeader)
+import MemoryProfile (Allocation (..), DataPoint (..), Section (..))
+import Parser (allocation, memoryProfile, section, sectionHeader)
 import Test.Tasty (TestTree, defaultMain, testGroup)
 import Test.Tasty.HUnit (testCase, (@?=))
 import Text.Megaparsec (runParser)

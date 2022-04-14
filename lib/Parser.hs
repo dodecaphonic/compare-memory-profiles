@@ -6,29 +6,11 @@ import qualified Data.String as T
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Void (Void)
+import MemoryProfile
 import Text.Megaparsec (Parsec, many, manyTill, try)
 import Text.Megaparsec.Char (asciiChar, char, digitChar, newline, space, string)
 
 type Parser = Parsec Void Text
-
-data DataPoint = DataPoint
-  { _value :: Integer,
-    _label :: Text
-  }
-  deriving (Eq, Show)
-
-data Allocation
-  = RegularAllocation DataPoint
-  | StringAllocation Text Integer [DataPoint]
-  deriving (Eq, Show)
-
-data Section = Section
-  { _name :: Text,
-    _allocations :: [Allocation]
-  }
-  deriving (Eq, Show)
-
-type MemoryProfile = [Section]
 
 sectionSeparator :: Text
 sectionSeparator = "-----------------------------------"

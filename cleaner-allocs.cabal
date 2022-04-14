@@ -28,6 +28,7 @@ executable cleaner-allocs
 
 library
   exposed-modules:     Parser
+                     , MemoryProfile
   -- other-extensions:
   build-depends:       base >=4.15 && <4.16
                      , megaparsec >=9.1 && <10
@@ -45,4 +46,5 @@ test-suite cleaner-allocs-test
                      , tasty >=1.4 && <2
                      , tasty-hunit >= 0.10 && <1
                      , cleaner-allocs
-  main-is:           Test.hs
+  main-is:             Test.hs
+  default-language:    Haskell2010

@@ -6,18 +6,23 @@ import Data.Function (on)
 import qualified Data.List as List
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
-import Data.Text (Text)
+import Data.Maybe (fromMaybe, isJust, isNothing, maybe)
+import Data.Text (Text, intersperse)
 import MemoryProfile (Allocation, MemoryProfile)
 import qualified MemoryProfile as MP
 import Optics
   ( Field1 (_1),
     Field2 (_2),
     Lens',
+    filtered,
+    folded,
     makeLenses,
     to,
     toListOf,
     traversed,
+    view,
     (%),
+    (%~),
     (&),
     (.~),
     (?~),
@@ -32,15 +37,30 @@ data Comparison = Comparison
     _profileB :: Maybe Integer,
     _label :: ComparisonLabel
   }
-  deriving (Eq, Show)
+  deriving (Eq)
 
 data ComparedSection = ComparedSection
   { _name :: Text,
     _comparisons :: [Comparison]
   }
-  deriving (Eq, Show)
+  deriving (Eq)
+
+instance Show Comparison where
+  show (Comparison profA profB label) =
+    maybe "-" show profA
+      <> "  "
+      <> maybe "-" show profB
+      <> "    "
+      <> show label
+
+instance Show ComparedSection where
+  show (ComparedSection name cs) =
+    show name
+      <> "\n-----------------------------------\n"
+      <> concat ((<> "\n") . show <$> cs)
 
 makeLenses ''Comparison
+makeLenses ''ComparedSection
 
 emptyComparison :: Text -> Comparison
 emptyComparison label = Comparison {_profileA = Nothing, _profileB = Nothing, _label = label}
@@ -97,3 +117,27 @@ compareProfiles profA profB =
                 )
               % traversed
           )
+
+filterBy :: (Comparison -> Bool) -> [ComparedSection] -> [ComparedSection]
+filterBy pred compSecs =
+  compSecs
+    & traversed
+    % comparisons
+    %~ toListOf (folded % filtered pred)
+
+allocationDiffAbovePct :: Integer -> [ComparedSection] -> [ComparedSection]
+allocationDiffAbovePct pct = filterBy (fromMaybe False . isDiffAbovePct)
+  where
+    isDiffAbovePct comp =
+      (\a b -> (fromIntegral (abs (a - b)) / fromIntegral a) > fromIntegral pct / 100.0)
+        <$> comp ^. profileA
+        <*> comp ^. profileB
+
+onlyPresentInProfileA :: [ComparedSection] -> [ComparedSection]
+onlyPresentInProfileA = filterBy (isNothing . view profileB)
+
+onlyPresentInProfileB :: [ComparedSection] -> [ComparedSection]
+onlyPresentInProfileB = filterBy (isNothing . view profileA)
+
+presentInBoth :: [ComparedSection] -> [ComparedSection]
+presentInBoth = filterBy (\c -> isJust (c ^. profileA) && isJust (c ^. profileB))

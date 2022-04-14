@@ -6,7 +6,7 @@ import qualified Data.String as T
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Void (Void)
-import Text.Megaparsec (Parsec, many, manyTill)
+import Text.Megaparsec (Parsec, many, manyTill, try)
 import Text.Megaparsec.Char (asciiChar, char, digitChar, newline, space, string)
 
 type Parser = Parsec Void Text
@@ -17,9 +17,14 @@ data DataPoint = DataPoint
   }
   deriving (Eq, Show)
 
+data Allocation
+  = RegularAllocation DataPoint
+  | StringAllocation Text Integer [DataPoint]
+  deriving (Eq, Show)
+
 data Section = Section
   { _name :: Text,
-    dataPoints :: [DataPoint]
+    _allocations :: [Allocation]
   }
   deriving (Eq, Show)
 
@@ -42,10 +47,23 @@ dataPoint = do
 
   pure $ DataPoint (read digits) (T.fromString label)
 
+allocation :: Text -> Parser Allocation
+allocation section_name
+  | "String Report" `T.isInfixOf` section_name = string_allocs
+  | otherwise = value_label
+  where
+    string_allocs = do
+      (DataPoint total str) <- dataPoint
+      allocations <- manyTill dataPoint newline
+
+      pure $ StringAllocation str total allocations
+
+    value_label = RegularAllocation <$> dataPoint
+
 section :: Parser Section
 section = do
   name <- sectionHeader
-  data_points <- many dataPoint
+  data_points <- many (try $ allocation name)
 
   pure (Section name data_points)
 

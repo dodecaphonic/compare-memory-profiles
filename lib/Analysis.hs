@@ -7,9 +7,23 @@ import qualified Data.List as List
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import Data.Text (Text)
-import MemoryProfile (Allocation, MemoryProfile, allocationLabel, allocations, name)
+import MemoryProfile (Allocation, MemoryProfile)
 import qualified MemoryProfile as MP
 import Optics
+  ( Field1 (_1),
+    Field2 (_2),
+    Lens',
+    makeLenses,
+    to,
+    toListOf,
+    traversed,
+    (%),
+    (&),
+    (.~),
+    (?~),
+    (^.),
+    (^..),
+  )
 
 type ComparisonLabel = Text
 
@@ -77,9 +91,9 @@ compareProfiles profA profB =
               % to
                 ( \section ->
                     section
-                      ^.. allocations
+                      ^.. MP.allocations
                       % traversed
-                      % to (\allocation -> ((section ^. name, allocation ^. allocationLabel), allocation))
+                      % to (\allocation -> ((section ^. MP.name, allocation ^. MP.allocationLabel), allocation))
                 )
               % traversed
           )

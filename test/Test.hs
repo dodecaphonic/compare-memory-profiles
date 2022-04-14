@@ -146,13 +146,13 @@ analysisTests =
             compareProfiles devProfile prodProfile
               @?= [ Comparison
                       { _label = "/foo/bar/baz/biz.rb:114",
-                        _profileA = Just $ RegularAllocation (DataPoint 141516 "/foo/bar/baz/biz.rb:114"),
-                        _profileB = Just $ RegularAllocation (DataPoint 34567 "/foo/bar/baz/biz.rb:114")
+                        _profileA = Just 141516,
+                        _profileB = Just 34567
                       },
                     Comparison
                       { _label = "/foo/bar/baz/bosh.rb:14",
-                        _profileA = Just $ RegularAllocation (DataPoint 1234567 "/foo/bar/baz/bosh.rb:14"),
-                        _profileB = Just $ RegularAllocation (DataPoint 891011 "/foo/bar/baz/bosh.rb:14")
+                        _profileA = Just 1234567,
+                        _profileB = Just 891011
                       }
                   ],
           testCase "includes data points only present on one end" $ do
@@ -173,13 +173,13 @@ analysisTests =
             compareProfiles devProfile prodProfile
               @?= [ Comparison
                       { _label = "/foo/bar/baz/biz.rb:114",
-                        _profileA = Just $ RegularAllocation (DataPoint 141516 "/foo/bar/baz/biz.rb:114"),
+                        _profileA = Just 141516,
                         _profileB = Nothing
                       },
                     Comparison
                       { _label = "/foo/bar/baz/bosh.rb:14",
                         _profileA = Nothing,
-                        _profileB = Just $ RegularAllocation (DataPoint 891011 "/foo/bar/baz/bosh.rb:14")
+                        _profileB = Just 891011
                       }
                   ]
         ]

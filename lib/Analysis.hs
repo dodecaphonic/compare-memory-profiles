@@ -12,8 +12,8 @@ import Optics
 type ComparisonLabel = Text
 
 data Comparison = Comparison
-  { _profileA :: Maybe Allocation,
-    _profileB :: Maybe Allocation,
+  { _profileA :: Maybe Integer,
+    _profileB :: Maybe Integer,
     _label :: ComparisonLabel
   }
   deriving (Eq, Show)
@@ -42,11 +42,12 @@ compareProfiles profA profB =
         .~ (b ^. profileB)
 
     comparisons ::
-      Lens' Comparison (Maybe Allocation) ->
+      Lens' Comparison (Maybe Integer) ->
       Map (Text, Text) Allocation ->
       Map (Text, Text) Comparison
     comparisons env =
-      fmap (\alloc -> emptyComparison (alloc ^. MP.allocationLabel) & env ?~ alloc)
+      fmap
+        (\alloc -> emptyComparison (alloc ^. MP.allocationLabel) & env ?~ (alloc ^. MP.allocationTotal))
 
     profAComparisons :: Map (Text, Text) Comparison
     profAComparisons = comparisons profileA (bySectionAndLabel profA)

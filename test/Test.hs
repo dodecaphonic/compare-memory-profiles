@@ -2,8 +2,8 @@
 
 module Main where
 
-import Analysis (Comparison (..), compareProfiles)
-import MemoryProfile (Allocation (..), DataPoint (DataPoint), Section (..))
+import Analysis (ComparedSection (..), Comparison (..), compareProfiles)
+import MemoryProfile (Allocation (..), DataPoint (DataPoint), Section (Section))
 import Parser (allocation, memoryProfile, section, sectionHeader)
 import Test.Tasty (TestTree, defaultMain, testGroup)
 import Test.Tasty.HUnit (testCase, (@?=))
@@ -144,15 +144,20 @@ analysisTests =
                   ]
 
             compareProfiles devProfile prodProfile
-              @?= [ Comparison
-                      { _label = "/foo/bar/baz/biz.rb:114",
-                        _profileA = Just 141516,
-                        _profileB = Just 34567
-                      },
-                    Comparison
-                      { _label = "/foo/bar/baz/bosh.rb:14",
-                        _profileA = Just 1234567,
-                        _profileB = Just 891011
+              @?= [ ComparedSection
+                      { _name = "A Good Section",
+                        _comparisons =
+                          [ Comparison
+                              { _label = "/foo/bar/baz/biz.rb:114",
+                                _profileA = Just 141516,
+                                _profileB = Just 34567
+                              },
+                            Comparison
+                              { _label = "/foo/bar/baz/bosh.rb:14",
+                                _profileA = Just 1234567,
+                                _profileB = Just 891011
+                              }
+                          ]
                       }
                   ],
           testCase "includes data points only present on one end" $ do
@@ -171,15 +176,20 @@ analysisTests =
                   ]
 
             compareProfiles devProfile prodProfile
-              @?= [ Comparison
-                      { _label = "/foo/bar/baz/biz.rb:114",
-                        _profileA = Just 141516,
-                        _profileB = Nothing
-                      },
-                    Comparison
-                      { _label = "/foo/bar/baz/bosh.rb:14",
-                        _profileA = Nothing,
-                        _profileB = Just 891011
+              @?= [ ComparedSection
+                      { _name = "A Good Section",
+                        _comparisons =
+                          [ Comparison
+                              { _label = "/foo/bar/baz/biz.rb:114",
+                                _profileA = Just 141516,
+                                _profileB = Nothing
+                              },
+                            Comparison
+                              { _label = "/foo/bar/baz/bosh.rb:14",
+                                _profileA = Nothing,
+                                _profileB = Just 891011
+                              }
+                          ]
                       }
                   ]
         ]

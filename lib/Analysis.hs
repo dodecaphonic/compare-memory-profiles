@@ -2,6 +2,8 @@
 
 module Analysis where
 
+import Data.Function (on)
+import qualified Data.List as List
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import Data.Text (Text)
@@ -20,7 +22,7 @@ data Comparison = Comparison
 
 data ComparedSection = ComparedSection
   { _name :: Text,
-    _comparison :: [Comparison]
+    _comparisons :: [Comparison]
   }
   deriving (Eq, Show)
 
@@ -29,11 +31,23 @@ makeLenses ''Comparison
 emptyComparison :: Text -> Comparison
 emptyComparison label = Comparison {_profileA = Nothing, _profileB = Nothing, _label = label}
 
-compareProfiles :: MemoryProfile -> MemoryProfile -> [Comparison]
+compareProfiles :: MemoryProfile -> MemoryProfile -> [ComparedSection]
 compareProfiles profA profB =
-  Map.elems
-    (Map.unionWith mergeComparisons profAComparisons profBComparisons)
+  Map.unionWith mergeComparisons profAComparisons profBComparisons
+    & Map.assocs
+    & List.sortBy (compare `on` fst . fst)
+    & List.groupBy ((==) `on` fst . fst)
+    & fmap comparedSection
   where
+    comparedSection :: [((Text, Text), Comparison)] -> ComparedSection
+    comparedSection [] = error "Should never be empty"
+    comparedSection cs@(c : _) =
+      ComparedSection
+        { _name = c ^. _1 % _1,
+          _comparisons = cs ^.. traversed % _2
+        }
+
+    mergeComparisons :: Comparison -> Comparison -> Comparison
     mergeComparisons a b =
       emptyComparison (a ^. label)
         & profileA

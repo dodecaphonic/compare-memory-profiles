@@ -2,7 +2,7 @@
 , optparse-applicative, tasty, tasty-hunit, text
 }:
 mkDerivation {
-  pname = "cleaner-allocs";
+  pname = "compare-memory-profiles";
   version = "0.1.0.0";
   src = ./.;
   isLibrary = true;

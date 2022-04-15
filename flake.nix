@@ -1,5 +1,5 @@
 {
-  description = "Optics by Example Exercises";
+  description = "compare-memory-profiles";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";

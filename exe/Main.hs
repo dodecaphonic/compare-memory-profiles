@@ -40,8 +40,8 @@ main = compareProfiles =<< execParser opts
       info
         (appConfig <**> helper)
         ( fullDesc
-            <> progDesc "Compare two Ruby memory-profiler dumps and apply useful filters"
-            <> header "compare-memory-profiles - Compares two Ruby memory dumps"
+            <> progDesc "Compare two Ruby memory_profiler dumps and apply useful filters"
+            <> header "compare-memory-profiles - Compares two Ruby memory_profiler dumps"
         )
 
 compareProfiles :: AppConfig -> IO ()

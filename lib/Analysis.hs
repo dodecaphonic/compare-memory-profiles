@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Analysis where
@@ -8,6 +9,7 @@ import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import Data.Maybe (fromMaybe, isJust, isNothing, maybe)
 import Data.Text (Text, intersperse)
+import qualified Data.Text as T
 import MemoryProfile (Allocation, MemoryProfile)
 import qualified MemoryProfile as MP
 import Optics
@@ -47,11 +49,27 @@ data ComparedSection = ComparedSection
 
 instance Show Comparison where
   show (Comparison profA profB label) =
-    maybe "-" show profA
-      <> "  "
-      <> maybe "-" show profB
-      <> "    "
-      <> show label
+    T.unpack $
+      ( padLeft 13 $
+          T.pack $
+            maybe "             -" show profA
+      )
+        <> "  "
+        <> ( padLeft 13 $
+               T.pack $
+                 maybe "             -" show profB
+           )
+        <> "    "
+        <> label
+
+padLeft :: Int -> Text -> Text
+padLeft desiredLength = go desiredLength
+  where
+    go :: Int -> Text -> Text
+    go n t
+      | T.length t >= desiredLength = t
+      | n == 0 = t
+      | otherwise = go (n - 1) (" " <> t)
 
 instance Show ComparedSection where
   show (ComparedSection name cs) =

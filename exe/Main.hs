@@ -1,34 +1,76 @@
 module Main where
 
 import Analysis (ComparedSection)
-import qualified Analysis as Analysis
+import qualified Analysis
 import Data.Either (fromRight)
+import Data.Foldable (traverse_)
+import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
+import Data.Void (Void)
 import MemoryProfile (MemoryProfile)
-import Parser
-import Text.Megaparsec
+import Optics (filtered, folded, view, (%), (^..))
+import Options.Applicative
+import Parser (memoryProfile)
+import Text.Megaparsec (ParseErrorBundle, runParser)
+
+data AppConfig = AppConfig
+  { profileAPath :: FilePath,
+    profileBPath :: FilePath,
+    profileAExclusive :: Bool,
+    profileBExclusive :: Bool,
+    allocationsDiffAbovePct :: Maybe Integer
+  }
+
+appConfig :: Parser AppConfig
+appConfig =
+  AppConfig
+    <$> strOption (long "profileA" <> short 'a' <> metavar "PROFILEA" <> help "Profile A (shown at the left in comparisons)")
+    <*> strOption (long "profileB" <> short 'b' <> metavar "PROFILEB" <> help "Profile B (shown at the right in comparisons)")
+    <*> switch (long "--only-in-a" <> short 'A' <> help "Show allocations only present in profile A")
+    <*> switch (long "--only-in-b" <> short 'B' <> help "Show allocations only present in profile B")
+    <*> ( optional $
+            option auto (long "--allocation-diff" <> short 'D' <> metavar "PCT" <> help "Only show allocations differing PCT between A and B")
+        )
 
 main :: IO ()
-main = do
-  let path = "/home/vitorcapela/Projects/Provide/cleaner/memory_profile_deal_development.log"
+main = compareProfiles =<< execParser opts
+  where
+    opts =
+      info
+        (appConfig <**> helper)
+        ( fullDesc
+            <> progDesc "Compare two Ruby memory-profiler dumps"
+            <> header "cleaner-allocs - A way out (hopefully) of Cleaner's weird production behavior"
+        )
+
+compareProfiles :: AppConfig -> IO ()
+compareProfiles config = do
+  profileA <- loadProfile (profileAPath config)
+  profileB <- loadProfile (profileBPath config)
+
+  let comparison = narrowDown <$> (Analysis.compareProfiles <$> profileA <*> profileB)
+
+  case comparison of
+    Right cs -> showComparisons cs
+    Left e -> error (show e)
+  where
+    narrowDown :: [ComparedSection] -> [ComparedSection]
+    narrowDown cs
+      | profileAExclusive config = Analysis.onlyPresentInProfileA cs
+      | profileBExclusive config = Analysis.onlyPresentInProfileB cs
+      | otherwise = case (allocationsDiffAbovePct config) of
+        Just diff -> Analysis.allocationDiffAbovePct diff cs
+        Nothing -> cs
+
+showComparisons :: [ComparedSection] -> IO ()
+showComparisons comparedSections = do
+  let nonEmpty = comparedSections ^.. folded % filtered (not . null . view Analysis.comparisons)
+
+  traverse_ (putStrLn . show) nonEmpty
+
+loadProfile :: FilePath -> IO (Either (ParseErrorBundle Text Void) MemoryProfile)
+loadProfile path = do
   rawProfile <- T.unlines . drop 3 . T.lines <$> T.readFile path
 
-  parseTest memoryProfile rawProfile
-
-compare :: IO [ComparedSection]
-compare = Analysis.compareProfiles <$> devLog <*> prodLog
-
-devLog :: IO MemoryProfile
-devLog = do
-  let path = "/home/vitorcapela/Projects/Provide/cleaner/experiments/profiles/memory_profile_answer_50_batches_development.log"
-  rawProfile <- T.unlines . drop 3 . T.lines <$> T.readFile path
-
-  pure $ fromRight [] $ runParser memoryProfile "dev" rawProfile
-
-prodLog :: IO MemoryProfile
-prodLog = do
-  let path = "/home/vitorcapela/Projects/Provide/cleaner/experiments/profiles/memory_profile_answer_50_batches_production.log"
-  rawProfile <- T.unlines . drop 3 . T.lines <$> T.readFile path
-
-  pure $ fromRight [] $ runParser memoryProfile "dev" rawProfile
+  pure $ runParser memoryProfile "dev" rawProfile

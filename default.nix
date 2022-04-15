@@ -1,5 +1,5 @@
-{ mkDerivation, base, containers, lib, megaparsec, optics, tasty
-, tasty-hunit, text
+{ mkDerivation, base, containers, lib, megaparsec, optics
+, optparse-applicative, tasty, tasty-hunit, text
 }:
 mkDerivation {
   pname = "cleaner-allocs";
@@ -8,7 +8,9 @@ mkDerivation {
   isLibrary = true;
   isExecutable = true;
   libraryHaskellDepends = [ base containers megaparsec optics text ];
-  executableHaskellDepends = [ base ];
+  executableHaskellDepends = [
+    base megaparsec optics optparse-applicative text
+  ];
   testHaskellDepends = [ base megaparsec tasty tasty-hunit text ];
   license = "unknown";
   hydraPlatforms = lib.platforms.none;

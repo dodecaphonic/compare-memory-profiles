@@ -9,9 +9,9 @@ $ compare-memory-profiles --help
 compare-memory-profiles - Compares two Ruby memory dumps
 
 Usage: compare-memory-profiles-exe (-a|--profileA PROFILEA)
-                                   (-b|--profileB PROFILEB) [-A|----only-in-a] 
-                                   [-B|----only-in-b] 
-                                   [-D|----allocation-diff PCT]
+                                   (-b|--profileB PROFILEB) [-A|--only-in-a] 
+                                   [-B|--only-in-b] 
+                                   [-D|--allocation-diff PCT]
   Compare two Ruby memory-profiler dumps and apply useful filters
 
 Available options:

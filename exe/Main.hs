@@ -27,10 +27,10 @@ appConfig =
   AppConfig
     <$> strOption (long "profileA" <> short 'a' <> metavar "PROFILEA" <> help "Profile A (shown at the left in comparisons)")
     <*> strOption (long "profileB" <> short 'b' <> metavar "PROFILEB" <> help "Profile B (shown at the right in comparisons)")
-    <*> switch (long "--only-in-a" <> short 'A' <> help "Show allocations only present in profile A")
-    <*> switch (long "--only-in-b" <> short 'B' <> help "Show allocations only present in profile B")
+    <*> switch (long "only-in-a" <> short 'A' <> help "Show allocations only present in profile A")
+    <*> switch (long "only-in-b" <> short 'B' <> help "Show allocations only present in profile B")
     <*> ( optional $
-            option auto (long "--allocation-diff" <> short 'D' <> metavar "PCT" <> help "Only show allocations differing PCT between A and B")
+            option auto (long "allocation-diff" <> short 'D' <> metavar "PCT" <> help "Only show allocations differing PCT between A and B")
         )
 
 main :: IO ()
@@ -40,8 +40,8 @@ main = compareProfiles =<< execParser opts
       info
         (appConfig <**> helper)
         ( fullDesc
-            <> progDesc "Compare two Ruby memory-profiler dumps"
-            <> header "cleaner-allocs - A way out (hopefully) of Cleaner's weird production behavior"
+            <> progDesc "Compare two Ruby memory-profiler dumps and apply useful filters"
+            <> header "compare-memory-profiles - Compares two Ruby memory dumps"
         )
 
 compareProfiles :: AppConfig -> IO ()

@@ -10,7 +10,6 @@ import Data.Void (Void)
 import MemoryProfile
 import Text.Megaparsec (Parsec, eof, many, manyTill, try)
 import Text.Megaparsec.Char (asciiChar, char, digitChar, newline, space, string)
-import Text.Megaparsec.Debug (dbg)
 
 type Parser = Parsec Void Text
 
@@ -26,8 +25,8 @@ sectionHeader = do
 
 dataPoint :: Parser DataPoint
 dataPoint = do
-  digits <- dbg "digits" $ space *> manyTill digitChar (string "  ")
-  label <- dbg "label" $ manyTill asciiChar newline
+  digits <- space *> manyTill digitChar (string "  ")
+  label <- manyTill asciiChar newline
 
   pure $ DataPoint (read digits) (T.pack label)
 
@@ -37,8 +36,8 @@ allocation section_name
   | otherwise = value_label
   where
     string_allocs = do
-      (DataPoint total str) <- dbg "string" dataPoint
-      allocations <- dbg "allocations" $ manyTill dataPoint newline
+      (DataPoint total str) <- dataPoint
+      allocations <- manyTill dataPoint newline
 
       pure $ StringAllocation str total allocations
 
@@ -46,7 +45,7 @@ allocation section_name
 
 section :: Parser Section
 section = do
-  name <- dbg "sectionHeader" sectionHeader
+  name <- sectionHeader
   data_points <- manyTill (try $ allocation name) (void newline <|> eof)
 
   pure (Section name data_points)

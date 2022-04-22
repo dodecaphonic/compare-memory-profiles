@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Main where
 
 import Analysis (ComparedSection)
@@ -9,18 +11,20 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import Data.Void (Void)
 import MemoryProfile (MemoryProfile)
-import Optics (filtered, folded, view, (%), (^..))
+import Optics (filtered, folded, makeLenses, view, (%), (^.), (^..))
 import Options.Applicative
 import Parser (memoryProfile)
 import Text.Megaparsec (ParseErrorBundle, runParser)
 
 data AppConfig = AppConfig
-  { profileAPath :: FilePath,
-    profileBPath :: FilePath,
-    profileAExclusive :: Bool,
-    profileBExclusive :: Bool,
-    allocationsDiffAbovePct :: Maybe Integer
+  { _profileAPath :: FilePath,
+    _profileBPath :: FilePath,
+    _profileAExclusive :: Bool,
+    _profileBExclusive :: Bool,
+    _allocationsDiffAbovePct :: Maybe Integer
   }
+
+makeLenses ''AppConfig
 
 appConfig :: Parser AppConfig
 appConfig =
@@ -46,8 +50,8 @@ main = compareProfiles =<< execParser opts
 
 compareProfiles :: AppConfig -> IO ()
 compareProfiles config = do
-  profileA <- loadProfile (profileAPath config)
-  profileB <- loadProfile (profileBPath config)
+  profileA <- loadProfile (config ^. profileAPath)
+  profileB <- loadProfile (config ^. profileBPath)
 
   let comparison = narrowDown <$> (Analysis.compareProfiles <$> profileA <*> profileB)
 
@@ -57,9 +61,9 @@ compareProfiles config = do
   where
     narrowDown :: [ComparedSection] -> [ComparedSection]
     narrowDown cs
-      | profileAExclusive config = Analysis.onlyPresentInProfileA cs
-      | profileBExclusive config = Analysis.onlyPresentInProfileB cs
-      | otherwise = case allocationsDiffAbovePct config of
+      | config ^. profileAExclusive = Analysis.onlyPresentInProfileA cs
+      | config ^. profileBExclusive = Analysis.onlyPresentInProfileB cs
+      | otherwise = case config ^. allocationsDiffAbovePct of
         Just diff -> Analysis.allocationDiffAbovePct diff cs
         Nothing -> cs
 

@@ -73,7 +73,7 @@ padLeft desiredLength = go desiredLength
 
 instance Show ComparedSection where
   show (ComparedSection name cs) =
-    show name
+    T.unpack name
       <> "\n-----------------------------------\n"
       <> concat ((<> "\n") . show <$> cs)
 

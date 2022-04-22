@@ -50,15 +50,17 @@ data ComparedSection = ComparedSection
 instance Show Comparison where
   show (Comparison profA profB label) =
     T.unpack $
-      ( padLeft 13 $
-          T.pack $
+      padLeft
+        13
+        ( T.pack $
             maybe "             -" show profA
-      )
+        )
         <> "  "
-        <> ( padLeft 13 $
-               T.pack $
-                 maybe "             -" show profB
-           )
+        <> padLeft
+          13
+          ( T.pack $
+              maybe "             -" show profB
+          )
         <> "    "
         <> label
 

@@ -29,9 +29,9 @@ appConfig =
     <*> strOption (long "profileB" <> short 'b' <> metavar "PROFILEB" <> help "Profile B (shown at the right in comparisons)")
     <*> switch (long "only-in-a" <> short 'A' <> help "Show allocations only present in profile A")
     <*> switch (long "only-in-b" <> short 'B' <> help "Show allocations only present in profile B")
-    <*> ( optional $
-            option auto (long "allocation-diff" <> short 'D' <> metavar "PCT" <> help "Only show allocations differing PCT between A and B")
-        )
+    <*> optional
+      ( option auto (long "allocation-diff" <> short 'D' <> metavar "PCT" <> help "Only show allocations differing PCT between A and B")
+      )
 
 main :: IO ()
 main = compareProfiles =<< execParser opts
@@ -59,7 +59,7 @@ compareProfiles config = do
     narrowDown cs
       | profileAExclusive config = Analysis.onlyPresentInProfileA cs
       | profileBExclusive config = Analysis.onlyPresentInProfileB cs
-      | otherwise = case (allocationsDiffAbovePct config) of
+      | otherwise = case allocationsDiffAbovePct config of
         Just diff -> Analysis.allocationDiffAbovePct diff cs
         Nothing -> cs
 
@@ -67,7 +67,7 @@ showComparisons :: [ComparedSection] -> IO ()
 showComparisons comparedSections = do
   let nonEmpty = comparedSections ^.. folded % filtered (not . null . view Analysis.comparisons)
 
-  traverse_ (putStrLn . show) nonEmpty
+  traverse_ print nonEmpty
 
 loadProfile :: FilePath -> IO (Either (ParseErrorBundle Text Void) MemoryProfile)
 loadProfile path = do
